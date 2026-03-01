@@ -53,9 +53,23 @@ class Catmodel extends CI_Model {
 			'timestamp' => time(),
 		));
 	}
-	public function loadSession($session_id){
-		return $this->db->where('id', (int)$session_id);
-		
+	/**
+	 * Load last 3 cat IDs for this session from the sessions table (chronological order).
+	 * Returns array of cat_id so controller can reverse for newest-first display.
+	 */
+	public function loadSession($session_id) {
+		if (empty($session_id)) return array();
+		$this->db->select('cat_id');
+		$this->db->where('session_id', $session_id);
+		$this->db->order_by('id', 'DESC');
+		$this->db->limit(3);
+		$query = $this->db->get('sessions');
+		$rows = $query->result();
+		$ids = array();
+		foreach ($rows as $row) {
+			$ids[] = (int) $row->cat_id;
+		}
+		return array_reverse($ids); // oldest first → controller reverses for display
 	}
 
 }
